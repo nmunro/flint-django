@@ -1,0 +1,73 @@
+services:
+  mysql:
+    image: mysql:latest
+    ports:
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: host
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: {{cookiecutter.project_name}}
+    volumes:
+      - type: volume
+        source: mysqldata
+        target: /var/lib/mysql
+      - /tmp/app/mysqld:/var/run/mysqld
+
+  web-dev:
+    build: 
+        context: .
+        target: dev
+    command: ["poetry", "run", "python", "-O", "manage.py", "runserver", "0.0.0.0:8000"]
+    depends_on:
+      - mysql
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: .
+        target: /app/{{cookiecutter.project_name}}
+      - type: bind
+        source: /tmp
+        target: /app/tmp
+      - /tmp/app/mysqld:/run/mysqld
+    env_file:
+        - .env
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+
+  web:
+    build: .
+    command: ["python", "-O", "manage.py", "runserver", "0.0.0.0:8000"]
+    depends_on:
+      - mysql
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: .
+        target: /app/{{cookiecutter.project_name}}
+      - type: bind
+        source: /tmp
+        target: /app/tmp
+      - /tmp/app/mysqld:/run/mysqld
+    env_file:
+        - .env
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+
+volumes:
+  mysqldata:
+  {{cookiecutter.project_name}}:
+
