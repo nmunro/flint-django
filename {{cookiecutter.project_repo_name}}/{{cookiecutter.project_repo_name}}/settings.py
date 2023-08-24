@@ -47,7 +47,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
-ROOT_URLCONF = '{{cookiecutter.project_name}}.urls'
+ROOT_URLCONF = '{{cookiecutter.project_repo_name}}.urls'
 
 TEMPLATES = [
     {
@@ -65,7 +65,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = '{{cookiecutter.project_name}}.wsgi.application'
+WSGI_APPLICATION = '{{cookiecutter.project_repo_name}}.wsgi.application'
 
 
 # Database

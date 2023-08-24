@@ -5,7 +5,6 @@ REPORT := $(or $(REPORT),report -m)
 GIT_CHANGED_PYTHON_FILES := $(shell git diff --name-only -- '***.py')
 DEV_TOOLS := $(and $(shell which docker git))
 COMPOSE_FILE := 'docker-compose.yml'
-RUNNING_CONTAINERS := $(shell docker ps -a -q -f name="{{cookiecutter.project_name}}-*")
 SERVICE := $(or $(SERVICE),web-dev)
 
 dev-tools-check:
@@ -25,6 +24,10 @@ start: dev-tools-check
 
 stop: dev-tools-check
 	@docker compose -f $(COMPOSE_FILE) down $(SERVICE) --remove-orphans
+
+ifeq ($(FORCE),true)
+	@docker container stop $(shell docker container ls -q --filter name="{{ cookiecutter.project_repo_name }}")
+endif
 
 lint:
 	@$(foreach file, $(GIT_CHANGED_PYTHON_FILES), $(shell docker compose -f $(COMPOSE_FILE) run --rm $(SERVICE) /bin/bash -c "poetry run black ${file} && poetry run isort ${file} && poetry run flake8 ${file}"))
@@ -94,7 +97,7 @@ create-super-user:
 
 docs:
 ifeq ($(SERVICE),web-dev)
-	@docker compose -f $(COMPOSE_FILE) run --rm $(SERVICE) poetry run sphinx-apidoc -f -o docs/source/ . ./*/test/*.py ./tests/*.py ./*/migrations/*.py ./*/tests/*.py ./settings/environments/*.py ./settings/*.py ./debug_snippet.py ./scinamic/update_compounds_from_scinamic.py
+	@docker compose -f $(COMPOSE_FILE) run --rm $(SERVICE) poetry run sphinx-apidoc -f -o docs/source/ . ./*/test/*.py ./tests/*.py ./*/migrations/*.py ./*/tests/*.py ./settings/*.py
 	@cd docs && make html COMPOSE_FILE=$(COMPOSE_FILE) SERVICE=$(SERVICE)
 else
 	$(error Command not available for service: '$(SERVICE)')
